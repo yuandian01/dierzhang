@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据可视化交互界面 - 第2章图表展示</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .tab-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+        
+        .chart-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .chart-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .chart-description {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .control-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .control-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .control-button:hover {
+            background: #5a6fd8;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chart-wrapper {
+                height: 300px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .tab-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 数据可视化交互界面</h1>
+            <p>第2章 - 2.1至2.10图表可视化展示</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('tab-line')">2.1 折线图</button>
+            <button class="tab-button" onclick="showTab('tab-bar')">2.2 柱形图</button>
+            <button class="tab-button" onclick="showTab('tab-horizontal-bar')">2.3 条形图</button>
+            <button class="tab-button" onclick="showTab('tab-area')">2.4 面积图</button>
+            <button class="tab-button" onclick="showTab('tab-histogram')">2.5 直方图</button>
+            <button class="tab-button" onclick="showTab('tab-pie')">2.6 饼图</button>
+        </div>
+        
+        <!-- 2.1 折线图 -->
+        <div id="tab-line" class="chart-container active">
+            <h2 class="chart-title">2.1 折线图 - 未来15天最高气温和最低气温</h2>
+            <p class="chart-description">展示未来15天的最高气温和最低气温变化趋势，可以调整数据点查看不同效果。</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">最高气温数据:</label>
+                    <input type="text" id="highTempData" class="control-input" value="32,33,34,34,33,31,30,29,30,29,26,23,21,25,31">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">最低气温数据:</label>
+                    <input type="text" id="lowTempData" class="control-input" value="19,19,20,22,22,21,22,16,18,18,17,14,15,16,16">
+                </div>
+                <button class="control-button" onclick="updateLineChart()">更新图表</button>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 2.2 柱形图 -->
+        <div id="tab-bar" class="chart-container">
+            <h2 class="chart-title">2.2 柱形图 - 阿里巴巴GMV数据</h2>
+            <p class="chart-description">展示2013-2019财年阿里巴巴淘宝和天猫平台的GMV数据，支持分组和堆积显示。</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">图表类型:</label>
+                    <select id="barType" class="control-input" onchange="updateBarChart()">
+                        <option value="grouped">分组柱形图</option>
+                        <option value="stacked">堆积柱形图</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 2.3 条形图 -->
+        <div id="tab-horizontal-bar" class="chart-container">
+            <h2 class="chart-title">2.3 条形图 - 各商品种类网购替代率</h2>
+            <p class="chart-description">展示不同商品种类的网购替代率，支持数据筛选和排序。</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">显示数量:</label>
+                    <input type="number" id="barCount" class="control-input" value="10" min="5" max="18" onchange="updateHorizontalBarChart()">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">排序方式:</label>
+                    <select id="barSort" class="control-input" onchange="updateHorizontalBarChart()">
+                        <option value="desc">降序排列</option>
+                        <option value="asc">升序排列</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="horizontalBarChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 2.4 面积图 -->
+        <div id="tab-area" class="chart-container">
+            <h2 class="chart-title">2.4 堆积面积图 - 物流公司费用统计</h2>
+            <p class="chart-description">展示三家物流公司全年各月的费用堆积情况。</p>
+            
+            <div class="chart-wrapper">
+                <div id="areaChart" style="width: 100%; height: 100%;"></div>
+            </div>
+        </div>
+        
+        <!-- 2.5 直方图 -->
+        <div id="tab-histogram" class="chart-container">
+            <h2 class="chart-title">2.5 直方图 - 随机数据分布</h2>
+            <p class="chart-description">展示随机数据的分布情况，可以调整分组数量和数据类型。</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">分组数量:</label>
+                    <input type="number" id="binCount" class="control-input" value="8" min="5" max="20" onchange="updateHistogram()">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">数据类型:</label>
+                    <select id="dataType" class="control-input" onchange="updateHistogram()">
+                        <option value="random">随机数据</option>
+                        <option value="normal">正态分布</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="histogramChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 2.6 饼图 -->
+        <div id="tab-pie" class="chart-container">
+            <h2 class="chart-title">2.6 饼图 - 支付宝月账单</h2>
+            <p class="chart-description">展示支付宝月账单的消费分类占比，支持环形图切换。</p>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">图表类型:</label>
+                    <select id="pieType" class="control-input" onchange="updatePieChart()">
+                        <option value="pie">饼图</option>
+                        <option value="doughnut">环形图</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+        
+
+    </div>
+
+    <script src="charts.js"></script>
+</body>
+</html>
